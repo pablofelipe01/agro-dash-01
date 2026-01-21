@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f3f4f6;
+  --foreground: #1f2937;
+  --primary: #22c55e;
+  --secondary: #8B4513;
+  --accent: #FF8C00;
 }
 
 @theme inline {
@@ -12,15 +15,90 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Leaflet custom styles */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.emoji-marker {
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+}
+
+.leaflet-popup-tip {
+  background: white;
+}
+
+/* Leaflet Draw custom styles */
+.leaflet-draw-toolbar a {
+  background-color: white;
+}
+
+.leaflet-draw-toolbar a:hover {
+  background-color: #f3f4f6;
+}
+
+.leaflet-draw-actions a {
+  background-color: #22c55e;
+  color: white;
+}
+
+.leaflet-draw-actions a:hover {
+  background-color: #16a34a;
+}
+
+/* Map legend position fix */
+.leaflet-bottom.leaflet-left {
+  z-index: 800;
+}
+
+/* Responsive chart containers */
+.recharts-wrapper {
+  width: 100% !important;
 }

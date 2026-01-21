@@ -1,65 +1,169 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+import { useAppStore } from '@/app/store/useAppStore';
+import { getUniqueCultivos, getUniqueNodos } from '@/app/lib/utils';
+import StatsPanel from '@/app/components/Stats/StatsPanel';
+import LoadingSpinner from '@/app/components/UI/LoadingSpinner';
+import ErrorMessage from '@/app/components/UI/ErrorMessage';
+
+// Dynamic import del mapa para evitar SSR issues con Leaflet
+const MapContainer = dynamic(
+  () => import('@/app/components/Map/MapContainer'),
+  {
+    ssr: false,
+    loading: () => <LoadingSpinner message="Cargando mapa..." />,
+  }
+);
+
+export default function HomePage() {
+  const {
+    registros,
+    isLoading,
+    error,
+    selectedCultivo,
+    selectedNodo,
+    fetchRegistros,
+    fetchLotes,
+    setFilter,
+    clearError,
+  } = useAppStore();
+
+  const cultivos = useMemo(() => getUniqueCultivos(registros), [registros]);
+  const nodos = useMemo(() => getUniqueNodos(registros), [registros]);
+
+  useEffect(() => {
+    fetchRegistros();
+    fetchLotes();
+  }, [fetchRegistros, fetchLotes]);
+
+  const handleRefresh = () => {
+    clearError();
+    fetchRegistros();
+    fetchLotes();
+  };
+
+  const handleClearFilters = () => {
+    setFilter(null, null);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <span className="text-3xl">🌾</span>
+                Agro Sirius Dashboard
+              </h1>
+              <p className="text-sm text-gray-600">
+                Gestion de Siembras en Tiempo Real
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Filtro por Cultivo */}
+              <select
+                value={selectedCultivo || ''}
+                onChange={(e) => setFilter(e.target.value || null, undefined)}
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="">Todos los cultivos</option>
+                {cultivos.map((cultivo) => (
+                  <option key={cultivo} value={cultivo}>
+                    {cultivo}
+                  </option>
+                ))}
+              </select>
+
+              {/* Filtro por Nodo */}
+              <select
+                value={selectedNodo || ''}
+                onChange={(e) => setFilter(undefined, e.target.value || null)}
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="">Todos los nodos</option>
+                {nodos.map((nodo) => (
+                  <option key={nodo} value={nodo}>
+                    {nodo}
+                  </option>
+                ))}
+              </select>
+
+              {/* Limpiar filtros */}
+              {(selectedCultivo || selectedNodo) && (
+                <button
+                  onClick={handleClearFilters}
+                  className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  Limpiar filtros
+                </button>
+              )}
+
+              {/* Boton Actualizar */}
+              <button
+                onClick={handleRefresh}
+                disabled={isLoading}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <svg
+                  className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                {isLoading ? 'Cargando...' : 'Actualizar'}
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {error && (
+          <div className="mb-4">
+            <ErrorMessage message={error} onRetry={handleRefresh} />
+          </div>
+        )}
+
+        {isLoading && registros.length === 0 ? (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <LoadingSpinner message="Cargando datos del dashboard..." />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Mapa - 60% */}
+            <div className="lg:col-span-3">
+              <div className="bg-white rounded-lg shadow overflow-hidden h-[50vh] lg:h-[calc(100vh-180px)]">
+                <MapContainer />
+              </div>
+            </div>
+
+            {/* Stats Panel - 40% */}
+            <div className="lg:col-span-2">
+              <StatsPanel />
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t mt-auto">
+        <div className="max-w-7xl mx-auto px-4 py-3 text-center text-sm text-gray-500">
+          Agro Sirius Dashboard - Sistema de Gestion de Siembras
+        </div>
+      </footer>
     </div>
   );
 }

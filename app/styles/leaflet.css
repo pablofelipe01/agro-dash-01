@@ -1,0 +1,90 @@
+/* Estilos adicionales para Leaflet - Agro Sirius Dashboard */
+
+/* Popup styles */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.leaflet-popup-tip-container {
+  margin-top: -1px;
+}
+
+/* Marker cluster styles (if needed in future) */
+.marker-cluster {
+  background-clip: padding-box;
+  border-radius: 50%;
+}
+
+.marker-cluster div {
+  width: 30px;
+  height: 30px;
+  margin-left: 5px;
+  margin-top: 5px;
+  text-align: center;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 12px;
+  line-height: 30px;
+}
+
+/* Draw control styles */
+.leaflet-draw-section {
+  margin-top: 5px;
+}
+
+.leaflet-draw-toolbar-top {
+  margin-top: 0;
+}
+
+.leaflet-draw-actions {
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+}
+
+.leaflet-draw-actions li:first-child a {
+  border-radius: 4px 0 0 4px;
+}
+
+.leaflet-draw-actions li:last-child a {
+  border-radius: 0 4px 4px 0;
+}
+
+/* Control buttons */
+.leaflet-control-zoom a,
+.leaflet-draw-toolbar a {
+  color: #333;
+}
+
+.leaflet-control-zoom a:hover,
+.leaflet-draw-toolbar a:hover {
+  color: #22c55e;
+}
+
+/* Attribution */
+.leaflet-control-attribution {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Polygon draw feedback */
+.leaflet-interactive:focus {
+  outline: none;
+}
+
+/* Custom emoji markers */
+.emoji-marker {
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.emoji-marker:hover {
+  transform: scale(1.2);
+  transition: transform 0.2s ease;
+}
