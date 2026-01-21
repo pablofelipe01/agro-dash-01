@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useAppStore } from '@/app/store/useAppStore';
-import { getUniqueCultivos, getUniqueNodos } from '@/app/lib/utils';
 import StatsPanel from '@/app/components/Stats/StatsPanel';
+import ModoToggle from '@/app/components/UI/ModoToggle';
 import LoadingSpinner from '@/app/components/UI/LoadingSpinner';
 import ErrorMessage from '@/app/components/UI/ErrorMessage';
 
@@ -19,33 +19,20 @@ const MapContainer = dynamic(
 
 export default function HomePage() {
   const {
-    registros,
+    lotesDefinidos,
     isLoading,
     error,
-    selectedCultivo,
-    selectedNodo,
-    fetchRegistros,
-    fetchLotes,
-    setFilter,
+    refetchAll,
     clearError,
   } = useAppStore();
 
-  const cultivos = useMemo(() => getUniqueCultivos(registros), [registros]);
-  const nodos = useMemo(() => getUniqueNodos(registros), [registros]);
-
   useEffect(() => {
-    fetchRegistros();
-    fetchLotes();
-  }, [fetchRegistros, fetchLotes]);
+    refetchAll();
+  }, [refetchAll]);
 
   const handleRefresh = () => {
     clearError();
-    fetchRegistros();
-    fetchLotes();
-  };
-
-  const handleClearFilters = () => {
-    setFilter(null, null);
+    refetchAll();
   };
 
   return (
@@ -60,50 +47,15 @@ export default function HomePage() {
                 Agro Sirius Dashboard
               </h1>
               <p className="text-sm text-gray-600">
-                Gestion de Siembras en Tiempo Real
+                Gestion de Fincas y Cultivos
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Filtro por Cultivo */}
-              <select
-                value={selectedCultivo || ''}
-                onChange={(e) => setFilter(e.target.value || null, undefined)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              >
-                <option value="">Todos los cultivos</option>
-                {cultivos.map((cultivo) => (
-                  <option key={cultivo} value={cultivo}>
-                    {cultivo}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Toggle de Modo */}
+              <ModoToggle />
 
-              {/* Filtro por Nodo */}
-              <select
-                value={selectedNodo || ''}
-                onChange={(e) => setFilter(undefined, e.target.value || null)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              >
-                <option value="">Todos los nodos</option>
-                {nodos.map((nodo) => (
-                  <option key={nodo} value={nodo}>
-                    {nodo}
-                  </option>
-                ))}
-              </select>
-
-              {/* Limpiar filtros */}
-              {(selectedCultivo || selectedNodo) && (
-                <button
-                  onClick={handleClearFilters}
-                  className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  Limpiar filtros
-                </button>
-              )}
-
-              {/* Boton Actualizar */}
+              {/* Boton Actualizar Datos */}
               <button
                 onClick={handleRefresh}
                 disabled={isLoading}
@@ -122,7 +74,7 @@ export default function HomePage() {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                {isLoading ? 'Cargando...' : 'Actualizar'}
+                {isLoading ? 'Cargando...' : 'Actualizar Datos'}
               </button>
             </div>
           </div>
@@ -137,7 +89,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {isLoading && registros.length === 0 ? (
+        {isLoading && lotesDefinidos.length === 0 ? (
           <div className="flex items-center justify-center min-h-[60vh]">
             <LoadingSpinner message="Cargando datos del dashboard..." />
           </div>
@@ -161,7 +113,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-white border-t mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-3 text-center text-sm text-gray-500">
-          Agro Sirius Dashboard - Sistema de Gestion de Siembras
+          Agro Sirius Dashboard - Sistema de Gestion de Fincas y Cultivos
         </div>
       </footer>
     </div>

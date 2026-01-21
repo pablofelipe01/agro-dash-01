@@ -1,4 +1,5 @@
 // Zustand Store para Agro Sirius Dashboard
+// Estado global con modos de edicion y visualizacion
 
 import { create } from 'zustand';
 import { AppStore } from '@/app/lib/types';
@@ -6,11 +7,12 @@ import { AppStore } from '@/app/lib/types';
 export const useAppStore = create<AppStore>((set, get) => ({
   // Estado inicial
   registros: [],
-  lotes: [],
+  lotesDefinidos: [],
+  lotesPintados: [],
   isLoading: false,
   error: null,
-  selectedCultivo: null,
-  selectedNodo: null,
+  modoEdicion: true, // Inicia en modo construccion
+  coordenadasBase: null,
 
   // Acciones
   fetchRegistros: async () => {
@@ -42,7 +44,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
         throw new Error(data.error || 'Error al obtener lotes');
       }
 
-      set({ lotes: data.data, isLoading: false });
+      set({
+        lotesDefinidos: data.data.lotesDefinidos,
+        lotesPintados: data.data.lotesPintados,
+        isLoading: false,
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       set({ error: errorMessage, isLoading: false });
@@ -67,12 +73,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
         throw new Error(data.error || 'Error al guardar lote');
       }
 
-      // Agregar el nuevo lote al estado
-      const currentLotes = get().lotes;
-      set({
-        lotes: [...currentLotes, data.data],
-        isLoading: false,
-      });
+      // Refetch para obtener datos actualizados
+      await get().fetchLotes();
+
+      set({ isLoading: false });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       set({ error: errorMessage, isLoading: false });
@@ -80,11 +84,45 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
-  setFilter: (cultivo, nodo) => {
-    set({
-      selectedCultivo: cultivo !== undefined ? cultivo : get().selectedCultivo,
-      selectedNodo: nodo !== undefined ? nodo : get().selectedNodo,
-    });
+  setCoordenadaBase: (coords) => {
+    set({ coordenadasBase: coords });
+  },
+
+  toggleModoEdicion: () => {
+    set((state) => ({ modoEdicion: !state.modoEdicion }));
+  },
+
+  refetchAll: async () => {
+    set({ isLoading: true, error: null });
+
+    try {
+      // Fetch registros y lotes en paralelo
+      const [registrosRes, lotesRes] = await Promise.all([
+        fetch('/api/sheets/registros'),
+        fetch('/api/sheets/lotes'),
+      ]);
+
+      const registrosData = await registrosRes.json();
+      const lotesData = await lotesRes.json();
+
+      if (!registrosData.success) {
+        throw new Error(registrosData.error || 'Error al obtener registros');
+      }
+
+      if (!lotesData.success) {
+        throw new Error(lotesData.error || 'Error al obtener lotes');
+      }
+
+      set({
+        registros: registrosData.data,
+        lotesDefinidos: lotesData.data.lotesDefinidos,
+        lotesPintados: lotesData.data.lotesPintados,
+        isLoading: false,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      set({ error: errorMessage, isLoading: false });
+    }
   },
 
   clearError: () => {

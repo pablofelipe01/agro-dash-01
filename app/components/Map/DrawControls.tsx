@@ -34,7 +34,7 @@ export default function DrawControls({ onPolygonDrawn }: DrawControlsProps) {
   return (
     <FeatureGroup ref={featureGroupRef}>
       <EditControl
-        position="topright"
+        position="topleft"
         onCreated={handleCreated}
         draw={{
           polygon: {
@@ -44,16 +44,18 @@ export default function DrawControls({ onPolygonDrawn }: DrawControlsProps) {
               message: '<strong>Error:</strong> Los bordes no pueden cruzarse',
             },
             shapeOptions: {
-              color: '#22c55e',
-              fillColor: '#22c55e',
+              color: '#f97316',
+              fillColor: '#f97316',
               fillOpacity: 0.3,
+              weight: 3,
             },
           },
           rectangle: {
             shapeOptions: {
-              color: '#22c55e',
-              fillColor: '#22c55e',
+              color: '#f97316',
+              fillColor: '#f97316',
               fillOpacity: 0.3,
+              weight: 3,
             },
           },
           polyline: false,

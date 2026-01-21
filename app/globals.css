@@ -76,8 +76,18 @@ body {
 }
 
 /* Leaflet Draw custom styles */
+.leaflet-draw {
+  z-index: 1001 !important;
+}
+
+.leaflet-draw-section {
+  margin-top: 50px !important;
+}
+
 .leaflet-draw-toolbar a {
   background-color: white;
+  width: 36px !important;
+  height: 36px !important;
 }
 
 .leaflet-draw-toolbar a:hover {
@@ -91,6 +101,15 @@ body {
 
 .leaflet-draw-actions a:hover {
   background-color: #16a34a;
+}
+
+/* Position draw controls below the mode banner */
+.leaflet-top.leaflet-left {
+  top: 50px !important;
+}
+
+.leaflet-top.leaflet-right {
+  top: 50px !important;
 }
 
 /* Map legend position fix */

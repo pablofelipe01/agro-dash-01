@@ -1,4 +1,5 @@
 // Cliente Google Sheets API para Agro Sirius Dashboard
+// FLUJO: Sheet1 (registros siembra) + Sheet2 (lotes definidos) -> Mapear -> Pintar
 
 import { google } from 'googleapis';
 import { RegistroSiembra, LoteDefinido } from './types';
@@ -40,6 +41,7 @@ async function getSheetsClient() {
   return google.sheets({ version: 'v4', auth });
 }
 
+// Obtener registros de siembra desde Sheet1
 export async function getRegistrosSiembra(): Promise<RegistroSiembra[]> {
   if (!SPREADSHEET_ID) {
     throw new Error('GOOGLE_SPREADSHEET_ID no está configurado');
@@ -76,6 +78,8 @@ export async function getRegistrosSiembra(): Promise<RegistroSiembra[]> {
   }));
 }
 
+// Obtener lotes definidos desde Sheet2
+// Sheet2 estructura SIMPLIFICADA: Lote | Sector | Polygon_Coords | Created_At
 export async function getLotesDefinidos(): Promise<LoteDefinido[]> {
   if (!SPREADSHEET_ID) {
     throw new Error('GOOGLE_SPREADSHEET_ID no está configurado');
@@ -86,7 +90,7 @@ export async function getLotesDefinidos(): Promise<LoteDefinido[]> {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_LOTES}!A:H`,
+      range: `${SHEET_LOTES}!A:D`,
     });
 
     const rows = response.data.values;
@@ -97,16 +101,26 @@ export async function getLotesDefinidos(): Promise<LoteDefinido[]> {
 
     const [, ...dataRows] = rows;
 
-    return dataRows.map((row) => ({
-      lote: row[0] || '',
-      sector: row[1] || '',
-      cultivo: row[2] || '',
-      variedad: row[3] || '',
-      hectareas: parseFloat(row[4]) || 0,
-      polygonCoords: row[5] ? JSON.parse(row[5]) : [],
-      color: row[6] || '#999999',
-      createdAt: row[7] || new Date().toISOString(),
-    }));
+    return dataRows.map((row) => {
+      let polygonCoords: [number, number][] = [];
+
+      // Parsear Polygon_Coords (es string JSON)
+      if (row[2]) {
+        try {
+          polygonCoords = JSON.parse(row[2]);
+        } catch {
+          console.error('Error parsing polygon coords:', row[2]);
+          polygonCoords = [];
+        }
+      }
+
+      return {
+        lote: row[0] || '',
+        sector: row[1] || '',
+        polygonCoords,
+        createdAt: row[3] || new Date().toISOString(),
+      };
+    });
   } catch (error: unknown) {
     // Si la hoja no existe, retornar array vacío
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -118,6 +132,9 @@ export async function getLotesDefinidos(): Promise<LoteDefinido[]> {
   }
 }
 
+// Guardar nuevo lote en Sheet2
+// Solo guarda: lote, sector, polygonCoords, createdAt
+// NO guarda cultivo, variedad, color (esos vienen de Sheet1)
 export async function saveLote(loteData: Omit<LoteDefinido, 'createdAt'>): Promise<void> {
   if (!SPREADSHEET_ID) {
     throw new Error('GOOGLE_SPREADSHEET_ID no está configurado');
@@ -125,43 +142,46 @@ export async function saveLote(loteData: Omit<LoteDefinido, 'createdAt'>): Promi
 
   const sheets = await getSheetsClient();
 
-  // Primero verificar si la hoja existe, si no, crearla
+  // Primero verificar si la hoja existe, si no, crear encabezados
   try {
     await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: `${SHEET_LOTES}!A1`,
     });
   } catch {
-    // La hoja no existe, crear encabezados
+    // La hoja no existe, crear encabezados simplificados
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
       range: `${SHEET_LOTES}!A1`,
       valueInputOption: 'RAW',
       requestBody: {
-        values: [['Lote', 'Sector', 'Cultivo', 'Variedad', 'Hectareas', 'PolygonCoords', 'Color', 'CreatedAt']],
+        values: [['Lote', 'Sector', 'Polygon_Coords', 'Created_At']],
       },
     });
   }
 
   const createdAt = new Date().toISOString();
 
+  // Datos simplificados - sin cultivo, variedad, color
   const rowData = [
     loteData.lote,
     loteData.sector,
-    loteData.cultivo,
-    loteData.variedad,
-    loteData.hectareas.toString(),
     JSON.stringify(loteData.polygonCoords),
-    loteData.color,
     createdAt,
   ];
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_LOTES}!A:H`,
+    range: `${SHEET_LOTES}!A:D`,
     valueInputOption: 'RAW',
     requestBody: {
       values: [rowData],
     },
   });
+}
+
+// Verificar si un lote+sector ya existe
+export async function existeLote(lote: string, sector: string): Promise<boolean> {
+  const lotes = await getLotesDefinidos();
+  return lotes.some((l) => l.lote === lote && l.sector === sector);
 }
