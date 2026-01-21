@@ -1,25 +1,18 @@
 'use client';
 
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { ChartData } from '@/app/lib/types';
 
 interface CultivosPieChartProps {
   data: ChartData[];
 }
 
-interface LabelProps {
-  cx?: number;
-  cy?: number;
-  midAngle?: number;
-  innerRadius?: number;
-  outerRadius?: number;
-  index?: number;
-}
+const COLORS = ['#8B4513', '#6F4E37', '#FF8C00', '#22c55e', '#3b82f6', '#ef4444', '#f59e0b'];
 
 export default function CultivosPieChart({ data }: CultivosPieChartProps) {
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-4 h-[300px] flex items-center justify-center">
+      <div className="bg-white rounded-lg shadow p-4 h-64 flex items-center justify-center">
         <p className="text-gray-500">No hay datos disponibles</p>
       </div>
     );
@@ -27,62 +20,41 @@ export default function CultivosPieChart({ data }: CultivosPieChartProps) {
 
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
-  const renderCustomLabel = (props: LabelProps) => {
-    const { cx = 0, cy = 0, midAngle = 0, innerRadius = 0, outerRadius = 0, index = 0 } = props;
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-    const item = data[index];
-    if (!item) return null;
-    const percent = ((item.value / total) * 100).toFixed(0);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={12}
-        fontWeight="bold"
-      >
-        {item.emoji} {percent}%
-      </text>
-    );
-  };
-
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">
         Distribucion por Cultivo
       </h3>
-      <ResponsiveContainer width="100%" height={250}>
-        <PieChart>
+      <div className="flex justify-center">
+        <PieChart width={320} height={320}>
           <Pie
             data={data}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={renderCustomLabel}
-            outerRadius={90}
+            cx={160}
+            cy={140}
+            innerRadius={50}
+            outerRadius={100}
+            paddingAngle={3}
             dataKey="value"
-            animationDuration={800}
+            label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+            labelLine={true}
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell
+                key={`cell-${index}`}
+                fill={entry.color || COLORS[index % COLORS.length]}
+                stroke="#fff"
+                strokeWidth={2}
+              />
             ))}
           </Pie>
           <Tooltip
-            formatter={(value, name) => {
+            formatter={(value) => {
               const numValue = typeof value === 'number' ? value : 0;
-              return [
-                `${numValue.toFixed(2)} ha (${((numValue / total) * 100).toFixed(1)}%)`,
-                name,
-              ];
+              return [`${numValue.toFixed(2)} ha`, 'Hectáreas'];
             }}
           />
           <Legend
+            verticalAlign="bottom"
             formatter={(value: string) => {
               const item = data.find((d) => d.name === value);
               const percent = item ? ((item.value / total) * 100).toFixed(0) : 0;
@@ -90,7 +62,7 @@ export default function CultivosPieChart({ data }: CultivosPieChartProps) {
             }}
           />
         </PieChart>
-      </ResponsiveContainer>
+      </div>
     </div>
   );
 }
