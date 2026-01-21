@@ -85,7 +85,8 @@ export default function CultivosPieChart({ data }: CultivosPieChartProps) {
           <Legend
             formatter={(value: string) => {
               const item = data.find((d) => d.name === value);
-              return `${item?.emoji || ''} ${value}`;
+              const percent = item ? ((item.value / total) * 100).toFixed(0) : 0;
+              return `${item?.emoji || ''} ${value} (${percent}%)`;
             }}
           />
         </PieChart>
