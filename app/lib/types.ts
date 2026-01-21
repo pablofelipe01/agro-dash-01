@@ -61,6 +61,7 @@ export interface AppActions {
   toggleModoEdicion: () => void;
   refetchAll: () => Promise<void>;
   clearError: () => void;
+  clearFinca: () => Promise<void>;
 }
 
 export type AppStore = AppState & AppActions;

@@ -185,3 +185,41 @@ export async function existeLote(lote: string, sector: string): Promise<boolean>
   const lotes = await getLotesDefinidos();
   return lotes.some((l) => l.lote === lote && l.sector === sector);
 }
+
+// Borrar todos los lotes (para demo/reset)
+export async function clearAllLotes(): Promise<void> {
+  if (!SPREADSHEET_ID) {
+    throw new Error('GOOGLE_SPREADSHEET_ID no está configurado');
+  }
+
+  const sheets = await getSheetsClient();
+
+  try {
+    // Obtener info de la hoja para saber cuántas filas hay
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_LOTES}!A:D`,
+    });
+
+    const rows = response.data.values;
+
+    if (!rows || rows.length <= 1) {
+      // Solo hay encabezados o está vacía
+      return;
+    }
+
+    // Borrar todas las filas excepto el encabezado (fila 1)
+    // Limpiar desde A2 hasta el final
+    await sheets.spreadsheets.values.clear({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_LOTES}!A2:D${rows.length}`,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('Unable to parse range')) {
+      // La hoja no existe, nada que borrar
+      return;
+    }
+    throw error;
+  }
+}

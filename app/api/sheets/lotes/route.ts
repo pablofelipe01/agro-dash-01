@@ -3,7 +3,7 @@
 // POST: Guarda nuevo lote (solo estructura, sin cultivo)
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getLotesDefinidos, getRegistrosSiembra, saveLote, existeLote } from '@/app/lib/google-sheets';
+import { getLotesDefinidos, getRegistrosSiembra, saveLote, existeLote, clearAllLotes } from '@/app/lib/google-sheets';
 import { mapRegistrosToLotes } from '@/app/lib/utils';
 import { LOTES_OPTIONS, SECTORES_OPTIONS } from '@/app/lib/constants';
 
@@ -126,6 +126,30 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error saving lote:', error);
+
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: errorMessage,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Borrar todos los lotes (reset para demo)
+export async function DELETE() {
+  try {
+    await clearAllLotes();
+
+    return NextResponse.json({
+      success: true,
+      message: 'Todos los lotes han sido eliminados',
+    });
+  } catch (error) {
+    console.error('Error clearing lotes:', error);
 
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
 

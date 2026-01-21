@@ -128,4 +128,31 @@ export const useAppStore = create<AppStore>((set, get) => ({
   clearError: () => {
     set({ error: null });
   },
+
+  clearFinca: async () => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const response = await fetch('/api/sheets/lotes', {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Error al borrar finca');
+      }
+
+      // Limpiar estado local
+      set({
+        lotesDefinidos: [],
+        lotesPintados: [],
+        isLoading: false,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
 }));
